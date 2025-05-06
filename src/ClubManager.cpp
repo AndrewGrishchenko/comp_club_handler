@@ -20,9 +20,11 @@ bool ClubManager::process() {
 
     read_line(in, line, iss);
     if (!(iss >> deskCount) || !check_leftover(iss)) return read_error(line);
+    desks.resize(deskCount);
 
     read_line(in, line, iss);
     if (!(iss >> openTime >> closeTime) || !check_leftover(iss)) return read_error(line);
+    output << openTime << std::endl;
 
     read_line(in, line, iss);
     if (!(iss >> hourPrice) || !check_leftover(iss)) return read_error(line);
@@ -33,53 +35,80 @@ bool ClubManager::process() {
     int deskId;
     while(read_line(in, line, iss)) {
         if (!(iss >> current_time >> id >> client)) return read_error(line);
+        if (id != 2 && !check_leftover(iss)) return read_error(line);
 
-        //TODO: add output entry
+        output << line << "\n";
 
-        switch (id) {
-            case 1:
-                //client arrived
-                //<time> 1 <client>
+        if (id == 1) {
+            if (current_time < openTime || current_time > closeTime) add_outcome_entry(current_time, 13, "NotOpenYet"); 
+            else if (visitors.find(client) != visitors.end()) add_outcome_entry(current_time, 13, "YouShallNotPass");
+            else visitors.insert(client);
+        } else if (id == 2) {
+            if (!(iss >> deskId) || !check_leftover(iss)) return read_error(line);
+
+            if (visitors.find(client) == visitors.end()) add_outcome_entry(current_time, 13, "ClientUnknown");
+            else if (!desks[deskId-1].client.empty()) add_outcome_entry(current_time, 13, "PlaseIsBusy");
+            else {
+                desks[deskId-1].startTime = current_time;
+                desks[deskId-1].client = client;
+            }
+        } else if (id == 3) {
+            bool hasFree = std::any_of(desks.begin(), desks.end(), [](const deskData& desk) {
+                return desk.client.empty();
+            });
+            if (hasFree) add_outcome_entry(current_time, 13, "ICanWaitNoLonger!");
+            else if (visitorsQueue.size() > deskCount) {
+                visitors.erase(client);
+                add_outcome_entry(current_time, 11, client);
+            } else {
+                visitorsQueue.push(client);
+            }
+
+        } else if (id == 4) {
+            if (visitors.find(client) == visitors.end()) add_outcome_entry(current_time, 13, "ClientUnknown");
+            else {
+                visitors.erase(client);
+                auto desk = std::find_if(desks.begin(), desks.end(), [&](const deskData& desk) {
+                    return desk.client == client;
+                });
+                desk->client = "";
+                desk->earnings += hourPrice * (current_time - desk->startTime).roundHrUp();
+                desk->totalTime = desk->totalTime + (current_time - desk->startTime);
                 
-                //TODO: if not working houts, "NotOpenYet"
-                //TODO: if already in club, "YouShallNotPass"
-                break;
-            case 2:
-                //client sits to desk
-                //<time> 2 <client> <desk>
-                
-                //TODO: if desk is busy, "PlaceIsBusy"
-                //TODO: if client trying to sit to desk he is sitting at, "PlaceIsBusy"
-                //TODO: if client not in club, "ClientUnknown"
-                break;
-            case 3:
-                //client is waiting
-                //<time> 3 <client>
-
-                //TODO: if there are free desks, "ICanWaitNoLonger!"
-                //TODO: if queue bigger than deskCount, gen event 11 (client leaves)
-                break;
-            case 4:
-                //client leaves
-                //<time> 4 <client>
-
-                //TODO: if client is not in club, "ClientUnknown"
-                //TODO: his desk is freeing now, gen event 12 (client seats to desk)
-                break;
+                if (visitorsQueue.size() != 0) {
+                    desk->startTime = current_time;
+                    desk->client = visitorsQueue.front();
+                    add_outcome_entry(current_time, 12, visitorsQueue.front(), (desk - desks.begin() + 1));
+                    visitorsQueue.pop();
+                }
+            }
+        } else {
+            std::cout << "Unknown id\n";
+            return false;
         }
-
-        //outcome
-        //11 -- client leaves
-        //<time> 11 <client>
-        //gen for every client when closing in alphabetical order
-        
-        //12 -- client sits to desk
-        //<time> 12 <client> <desk>
-        //gen for first client in queue when desk is freeing
-        
-        //13 -- error
-        //<time> 13 <error>
     }
+
+    for (auto& desk : desks) {
+        if (desk.client != "") {
+            desk.earnings += hourPrice * (closeTime - desk.startTime).roundHrUp();
+            desk.totalTime = desk.totalTime + (closeTime - desk.startTime);
+            add_outcome_entry(closeTime, 11, client);
+            visitors.erase(client);
+        }
+    }
+
+    for (const auto& client : visitors) {
+        add_outcome_entry(closeTime, 11, client);
+    }
+    visitors.clear();
+    
+    output << closeTime << std::endl;
+
+    for (int i = 0; i < deskCount; i++) {
+        output << (i + 1) << " " << desks[i].earnings << " " << desks[i].totalTime << std::endl;
+    }
+
+    std::cout << output.str();
 
     return true;
 }
@@ -107,4 +136,11 @@ bool ClubManager::check_leftover(std::istringstream& iss) {
         return false;
     }
     return true;
+}
+
+template <typename... Args>
+void ClubManager::add_outcome_entry(ClockTime entryTime, int id, const Args&... args) {
+    output << entryTime << " " << id;
+    ((output << " " << args), ...);
+    output << std::endl;
 }

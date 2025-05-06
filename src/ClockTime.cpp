@@ -2,6 +2,13 @@
 
 ClockTime::ClockTime() { }
 
+ClockTime::ClockTime(std::string timeStr) {
+    parse(timeStr);
+}
+
+ClockTime::ClockTime(int hour, int minute)
+    : hour(hour), minute(minute) { }
+
 ClockTime::~ClockTime() { }
 
 bool ClockTime::parse(std::string timeStr) {
@@ -18,10 +25,15 @@ bool ClockTime::parse(std::string timeStr) {
     return true;
 }
 
-std::string ClockTime::get_str() {
+std::string ClockTime::str() const {
     std::ostringstream oss;
     oss << (hour < 10 ? "0" : "") << hour << ":" << (minute < 10 ? "0" : "") << minute;
     return oss.str();
+}
+
+int ClockTime::roundHrUp() {
+    if (minute == 0) return hour;
+    else return hour + 1;
 }
 
 std::istream& operator>> (std::istream& is, ClockTime& time) {
@@ -32,6 +44,11 @@ std::istream& operator>> (std::istream& is, ClockTime& time) {
         }
     }
     return is;
+}
+
+std::ostream& operator<<(std::ostream& os, const ClockTime& time) {
+    os << time.str();
+    return os;
 }
 
 bool ClockTime::operator<(const ClockTime& other) const {
@@ -52,4 +69,26 @@ bool ClockTime::operator>(const ClockTime& other) const {
         return true;
     }
     return false;
+}
+
+ClockTime ClockTime::operator+(const ClockTime& other) const {
+    int totalMnThis = hour * 60 + minute;
+    int totalMnOther = other.hour * 60 + other.minute;
+
+    int diffMn = totalMnThis + totalMnOther;
+    int diffHr = diffMn / 60;
+    diffMn %= 60;
+
+    return ClockTime(diffHr, diffMn);
+}
+
+ClockTime ClockTime::operator-(const ClockTime& other) const {
+    int totalMnThis = hour * 60 + minute;
+    int totalMnOther = other.hour * 60 + other.minute;
+
+    int diffMn = std::abs(totalMnThis - totalMnOther);
+    int diffHr = diffMn / 60;
+    diffMn = diffMn % 60;
+
+    return ClockTime(diffHr, diffMn);
 }

@@ -2,5 +2,10 @@
 
 int main() {
     ClubManager* manager = new ClubManager("input.txt");
-    manager->process();
+    if (!manager->process()) {
+        std::cout << "Error has occured; program stopped" << std::endl;
+        return 1;
+    }
+
+    return 0;
 }
