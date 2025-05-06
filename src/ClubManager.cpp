@@ -109,6 +109,10 @@ bool ClubManager::process() {
     return true;
 }
 
+std::string ClubManager::get_output() {
+    return output.str();
+}
+
 bool ClubManager::read_error(std::string& line) {
     std::cout << line << std::endl;
     return false;

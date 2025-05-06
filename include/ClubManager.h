@@ -18,6 +18,7 @@ class ClubManager {
         ClubManager(std::string filename);
 
         bool process();
+        std::string get_output();
 
     private:
         std::string filename;
