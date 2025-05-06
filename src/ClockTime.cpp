@@ -9,8 +9,6 @@ ClockTime::ClockTime(std::string timeStr) {
 ClockTime::ClockTime(int hour, int minute)
     : hour(hour), minute(minute) { }
 
-ClockTime::~ClockTime() { }
-
 bool ClockTime::parse(std::string timeStr) {
     if (timeStr.length() != 5 || timeStr[2] != ':') return false;
 

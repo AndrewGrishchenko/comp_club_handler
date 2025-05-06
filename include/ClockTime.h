@@ -10,7 +10,6 @@ class ClockTime {
         ClockTime();
         ClockTime(std::string timeStr);
         ClockTime(int hour, int minute);
-        ~ClockTime();
 
         bool parse(std::string timeStr);
         std::string str() const;

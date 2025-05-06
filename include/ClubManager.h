@@ -16,7 +16,6 @@
 class ClubManager {
     public:
         ClubManager(std::string filename);
-        ~ClubManager();
 
         bool process();
 

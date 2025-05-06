@@ -3,10 +3,6 @@
 ClubManager::ClubManager(std::string filename)
     : filename(filename) { }
 
-ClubManager::~ClubManager() {
-
-}
-
 bool ClubManager::process() {
     std::ifstream in(filename);
 
