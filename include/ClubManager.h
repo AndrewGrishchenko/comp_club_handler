@@ -24,7 +24,7 @@ class ClubManager {
 
         bool read_error(std::string& line);
         bool read_line(std::istream& in, std::string& line, std::istringstream& iss);
-        bool check_leftover(std::istringstream& iss, std::string& line);
+        bool check_leftover(std::istringstream& iss);
 };
 
 #endif

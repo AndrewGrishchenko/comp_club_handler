@@ -18,19 +18,14 @@ bool ClubManager::process() {
     std::string line;
     std::istringstream iss;
 
-    //TODO: check leftover in reading
+    read_line(in, line, iss);
+    if (!(iss >> deskCount) || !check_leftover(iss)) return read_error(line);
 
     read_line(in, line, iss);
-    if (!(iss >> deskCount)) return read_error(line);
-    return check_leftover(iss, line);
+    if (!(iss >> openTime >> closeTime) || !check_leftover(iss)) return read_error(line);
 
     read_line(in, line, iss);
-    if (!(iss >> openTime >> closeTime)) return read_error(line);
-    return check_leftover(iss, line);
-
-    read_line(in, line, iss);
-    if (!(iss >> hourPrice)) return read_error(line);
-    return check_leftover(iss, line);
+    if (!(iss >> hourPrice) || !check_leftover(iss)) return read_error(line);
 
     ClockTime current_time;
     int id;
@@ -107,9 +102,9 @@ bool ClubManager::read_line(std::istream& in, std::string& line, std::istringstr
     return true;
 }
 
-bool ClubManager::check_leftover(std::istringstream& iss, std::string& line) {
+bool ClubManager::check_leftover(std::istringstream& iss) {
     if (iss.peek() != EOF) {
-        return read_error(line);
+        return false;
     }
     return true;
 }
