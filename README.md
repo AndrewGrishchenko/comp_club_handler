@@ -22,6 +22,7 @@ Input file must meet following format
 Then following income events in format<br>
 `<Time of event> <Event ID> <Event body>`
 
+Everywhere time is represented as HH:MM<br>
 If any line does not meet format, this line will be printed and program will stop
 
 Income events:
